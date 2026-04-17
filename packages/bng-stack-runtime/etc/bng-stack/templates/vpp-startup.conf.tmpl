@@ -1,0 +1,40 @@
+# /etc/bng-stack/templates/vpp-startup.conf.tmpl
+# VPP startup.conf template
+# Variables:
+#   {{VPP_MAIN_CORE}}     e.g. 0
+#   {{VPP_WORKERS}}       e.g. 1-4
+#   {{DPDK_DEVICES}}      multi-line block of dev entries
+#   {{NR_HUGEPAGES}}      e.g. 1024
+
+unix {
+  nodaemon
+  log /var/log/vpp/vpp.log
+  cli-listen /run/vpp/cli.sock
+  exec /etc/vpp/bootstrap.cli
+}
+
+plugins {
+  plugin default { enable }
+  plugin dpdk_plugin.so { enable }
+  plugin linux_cp_plugin.so { enable }
+  plugin linux_nl_plugin.so { enable }
+}
+
+dpdk {
+  uio-driver vfio-pci
+{{DPDK_DEVICES}}
+}
+
+linux-cp {
+  lcp-sync
+  lcp-auto-subint
+}
+
+cpu {
+  main-core {{VPP_MAIN_CORE}}
+  corelist-workers {{VPP_WORKERS}}
+}
+
+statseg {
+  per-node-counters on
+}

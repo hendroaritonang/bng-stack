@@ -1,0 +1,10 @@
+Package: bng-monitor
+Version: 1.0.0
+Architecture: amd64
+Maintainer: Hendro Aritonang <hendroaritonang07@gmail.com>
+Depends: python3, python3-venv, python3-pip
+Description: BNG Monitor — Web dashboard for VPP/Accel-PPP monitoring
+ FastAPI-based web dashboard for real-time monitoring of BNG stack:
+ PPPoE sessions, policer traffic, RADIUS, alerts, and history.
+ Runs on port 8877 by default.
+Installed-Size: 336

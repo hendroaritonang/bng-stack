@@ -1,0 +1,17 @@
+[Unit]
+Description=VPP Prometheus Exporter
+After=vpp.service
+Requires=vpp.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/vpp_prometheus_export v2 \
+  "^/sys/heartbeat" "^/sys/last_stats_clear" "^/sys/boottime" \
+  "^/sys/vector_rate" "^/sys/vector_rate_per_worker" "^/sys/loops_per_worker" \
+  "^/sys/num_worker_threads" "^/sys/last_update" "^/sys/input_rate" \
+  "^/mem/" "^/nodes/" "^/interfaces/" "^/buffer-pools/"
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,24 @@
+[Unit]
+Description=Accel-PPP instance %i
+After=network.target vpp.service
+Wants=vpp.service
+
+[Service]
+Environment=LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:/usr/local/lib64:/usr/lib64
+Type=forking
+PIDFile=/run/accel-pppd-%i.pid
+ExecStartPre=/usr/local/sbin/accel-ppp-vpp-cleanup.sh %i
+ExecStart=/usr/local/sbin/accel-pppd -d -p /run/accel-pppd-%i.pid -c /etc/accel-ppp-%i.conf
+ExecReload=/bin/kill -SIGUSR1 $MAINPID
+ExecStop=/bin/kill -TERM $MAINPID
+ExecStopPost=/usr/local/sbin/accel-ppp-vpp-cleanup.sh %i
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=accel-ppp-%i
+Restart=on-abnormal
+TimeoutStartSec=30s
+TimeoutStopSec=15s
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,87 @@
+name: Build and Publish apt Repository
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version (e.g. 1.0.1)'
+        required: true
+        default: '1.0.0'
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION="${{ github.event.inputs.version }}"
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq dpkg-dev apt-utils gnupg
+
+      - name: Build packages
+        run: make VERSION=${{ env.VERSION }}
+
+      - name: Upload .deb artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: bng-stack-debs-${{ env.VERSION }}
+          path: dist/*.deb
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          name: "BNG Stack ${{ env.VERSION }}"
+          body: |
+            ## BNG Stack ${{ env.VERSION }}
+
+            ### Install
+            ```bash
+            curl -fsSL https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/install.sh | sudo bash
+            ```
+
+            ### Or add apt repo manually
+            ```bash
+            echo "deb [trusted=yes] https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }} stable main" \
+              | sudo tee /etc/apt/sources.list.d/bng-stack.list
+            sudo apt update
+            sudo apt install bng-stack-runtime bng-monitor
+            ```
+          files: dist/*.deb
+
+      - name: Deploy apt repo to GitHub Pages
+        run: |
+          # Copy apt repo to gh-pages branch folder
+          cp -r dist/apt-repo ./apt-repo-publish
+          # Add .nojekyll so GitHub Pages serves the files raw
+          touch apt-repo-publish/.nojekyll
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./apt-repo-publish
+          publish_branch: gh-pages
+          force_orphan: false
+          keep_files: true

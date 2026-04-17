@@ -1,0 +1,50 @@
+#!/bin/bash
+# bng-stack-start — start all BNG stack services in correct order
+
+set -euo pipefail
+GREEN='\033[0;32m'; CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
+
+SETUP_CONF=/etc/bng-stack/setup.conf
+[ -f "$SETUP_CONF" ] || { echo "Run bng-stack-configure first."; exit 1; }
+# shellcheck source=/dev/null
+source "$SETUP_CONF"
+
+info() { echo -e "${CYAN}  → $*${NC}"; }
+ok()   { echo -e "${GREEN}  ✓ $*${NC}"; }
+
+echo -e "${BOLD}Starting BNG Stack...${NC}"
+
+systemctl daemon-reload
+
+info "Starting VPP ..."
+systemctl restart vpp.service
+sleep 4
+ok "VPP started"
+
+info "Starting FRR ..."
+systemctl restart frr.service 2>/dev/null || true
+ok "FRR started"
+
+info "Starting PPPoE neighbor sync ..."
+systemctl restart pppoe-neigh-sync.service
+ok "pppoe-neigh-sync started"
+
+info "Starting accel-ppp instances ..."
+for i in $(seq 1 "$BR_COUNT"); do
+    eval "bname=\$BR_NAME_${i}"
+    systemctl restart "accel-ppp@${bname}.service"
+    sleep 1
+    ok "accel-ppp@${bname} started"
+done
+
+info "Starting BNG Monitor ..."
+systemctl restart bng-monitor.service
+ok "bng-monitor started"
+
+info "Starting VPP exporter ..."
+systemctl restart vpp-exporter.service 2>/dev/null || true
+
+echo ""
+echo -e "${GREEN}${BOLD}All services started.${NC}"
+echo ""
+bng-stack-status

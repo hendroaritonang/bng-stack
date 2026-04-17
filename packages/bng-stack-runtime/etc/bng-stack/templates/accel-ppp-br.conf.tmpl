@@ -1,0 +1,84 @@
+# /etc/bng-stack/templates/accel-ppp-br.conf.tmpl
+# Template for accel-ppp BR instance config
+# Variables replaced by bng-stack-configure:
+#   {{BR_NAME}}       e.g. br1
+#   {{VLAN_ID}}       e.g. 100
+#   {{AC_NAME}}       e.g. accel-vpp-ng-br1
+#   {{GW_IP}}         e.g. 192.168.100.1
+#   {{NAS_IP}}        e.g. 10.10.13.171
+#   {{RADIUS_SERVER}} e.g. 202.162.204.175
+#   {{RADIUS_SECRET}} e.g. mysecret
+#   {{CLI_PORT}}      e.g. 2001
+#   {{CLI_TELNET}}    e.g. 2000
+#   {{DNS1}}          e.g. 8.8.8.8
+#   {{DNS2}}          e.g. 8.8.4.4
+#   {{THREAD_COUNT}}  e.g. 4
+
+[modules]
+log_file
+log_syslog
+pppoe
+auth_pap
+auth_chap_md5
+auth_mschap_v1
+auth_mschap_v2
+ippool
+chap-secrets
+radius
+vyos_vpp
+shaper
+
+[core]
+log-error=/var/log/accel-ppp/{{BR_NAME}}-core.log
+thread-count={{THREAD_COUNT}}
+
+[ppp]
+verbose=1
+mtu=1492
+mru=1492
+ipv4=require
+ipv6=deny
+lcp-echo-interval=10
+lcp-echo-timeout=30
+unit-cache=0
+
+[pppoe]
+interface=vlan{{VLAN_ID}},vpp-cp=enable
+ac-name={{AC_NAME}}
+accept-any-service=1
+called-sid=mac
+verbose=1
+
+[radius]
+verbose=2
+dictionary=/usr/share/accel-ppp/radius/dictionary
+server={{RADIUS_SERVER}},{{RADIUS_SECRET}},auth-port=1812,acct-port=1813,req-limit=0,fail-timeout=0,max-fail=0,weight=1
+nas-ip-address={{NAS_IP}}
+gw-ip-address={{GW_IP}}
+acct-interim-interval=60
+timeout=5
+
+[shaper]
+vendor=Mikrotik
+attr=Mikrotik-Rate-Limit
+up-limiter=police
+down-limiter=tbf
+
+[dns]
+dns1={{DNS1}}
+dns2={{DNS2}}
+
+[chap-secrets]
+chap-secrets=/etc/ppp/chap-secrets
+
+[cli]
+tcp=127.0.0.1:{{CLI_PORT}}
+telnet=127.0.0.1:{{CLI_TELNET}}
+verbose=1
+
+[log]
+log-file=/var/log/accel-ppp/{{BR_NAME}}.log
+log-fail-file=/var/log/accel-ppp/{{BR_NAME}}-auth-fail.log
+syslog=accel-ppp
+level=5
+log-ppp-info=/var/log/accel-ppp/{{BR_NAME}}-ppp-info.log

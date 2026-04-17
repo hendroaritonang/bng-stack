@@ -1,0 +1,17 @@
+[Unit]
+Description=PPPoE Neighbor Sync (accel-ppp -> VPP -> Linux)
+After=network-online.target vpp.service
+Wants=network-online.target vpp.service
+
+[Service]
+Type=simple
+User=root
+RuntimeDirectory=pppoe-neigh-sync
+ExecStart=/usr/local/sbin/pppoe-neigh-sync.py --daemon --interval 2
+Restart=always
+RestartSec=2
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

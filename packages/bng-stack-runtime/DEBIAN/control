@@ -1,0 +1,13 @@
+Package: bng-stack-runtime
+Version: 1.0.0
+Architecture: amd64
+Maintainer: Hendro Aritonang <hendroaritonang07@gmail.com>
+Depends: vpp, vpp-plugin-core, vpp-plugin-dpdk, frr, python3
+Recommends: accel-web-manager, vpp-snmp-agent
+Description: BNG Stack Runtime — accel-pppd, VPP plugins, and system services
+ Custom accel-pppd binary with VyOS VPP integration plugin (libvyos_vpp.so),
+ PPPoE neighbor sync daemon, accel-ppp cleanup script, systemd service units,
+ and VPP/sysctl configuration for a complete BNG stack deployment.
+ .
+ Assumes VPP custom build (vyos) is already installed.
+Installed-Size: 1100

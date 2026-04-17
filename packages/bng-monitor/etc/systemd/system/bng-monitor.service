@@ -1,0 +1,22 @@
+[Unit]
+Description=BNG Monitor — Web GUI for VPP/Accel-PPP monitoring
+After=network.target vpp.service
+Wants=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/bng-monitor
+EnvironmentFile=-/etc/bng-stack/monitor.env
+ExecStart=/opt/bng-monitor/venv/bin/python -m uvicorn main:app \
+    --host 0.0.0.0 \
+    --port ${BNG_MONITOR_PORT:-8877} \
+    --log-level info
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=bng-monitor
+
+[Install]
+WantedBy=multi-user.target

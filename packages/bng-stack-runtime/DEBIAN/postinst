@@ -1,0 +1,35 @@
+#!/bin/bash
+# bng-stack-runtime postinst — runs after package files are installed
+
+set -e
+
+# ── symlink libvyos_vpp.so to both lib paths ──────────────────────────
+mkdir -p /usr/local/lib64/accel-ppp
+ln -sf /usr/lib64/accel-ppp/libvyos_vpp.so /usr/local/lib64/accel-ppp/libvyos_vpp.so
+
+# ── permissions ───────────────────────────────────────────────────────
+chmod +x /usr/local/sbin/accel-pppd
+chmod +x /usr/local/sbin/accel-ppp-vpp-cleanup.sh
+chmod +x /usr/local/sbin/pppoe-neigh-sync.py
+
+# ── log directories ───────────────────────────────────────────────────
+mkdir -p /var/log/accel-ppp
+mkdir -p /run/accel-ppp-vpp
+mkdir -p /run/pppoe-neigh-sync
+
+# ── apply sysctl (hugepages) ──────────────────────────────────────────
+sysctl -p /etc/sysctl.d/80-vpp.conf >/dev/null 2>&1 || true
+
+# ── enable systemd services (but don't start — needs config first) ────
+systemctl daemon-reload
+systemctl enable pppoe-neigh-sync.service 2>/dev/null || true
+
+echo ""
+echo "────────────────────────────────────────────────────────────"
+echo " bng-stack-runtime installed."
+echo " Run: bng-stack-configure    to set up accel-ppp + VPP config"
+echo " Run: bng-stack-status       to check service status"
+echo "────────────────────────────────────────────────────────────"
+echo ""
+
+exit 0

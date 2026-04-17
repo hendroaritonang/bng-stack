@@ -1,0 +1,40 @@
+#!/bin/bash
+# bng-monitor postinst
+set -e
+
+APP_DIR=/opt/bng-monitor
+DATA_DIR=/var/lib/bng-monitor
+ENV_FILE=/etc/bng-stack/monitor.env
+
+mkdir -p "$DATA_DIR" /etc/bng-stack
+
+# Build Python venv if not already present
+if [ ! -f "$APP_DIR/venv/bin/python" ]; then
+    echo "  → Creating Python venv for bng-monitor..."
+    python3 -m venv "$APP_DIR/venv"
+    "$APP_DIR/venv/bin/pip" install --quiet --upgrade pip
+    "$APP_DIR/venv/bin/pip" install --quiet -r "$APP_DIR/requirements.txt"
+    echo "  ✓ Python venv ready"
+fi
+
+# Write default service env if not already configured
+if [ ! -f "$ENV_FILE" ]; then
+    mkdir -p "$(dirname "$ENV_FILE")"
+    cat > "$ENV_FILE" <<ENV
+BNG_MONITOR_DATA=${DATA_DIR}
+BNG_MONITOR_SECRET=$(openssl rand -hex 32)
+BNG_MONITOR_PORT=8877
+BNG_MONITOR_ADMIN_USER=admin
+BNG_MONITOR_ADMIN_PASS=admin
+ENV
+fi
+
+systemctl daemon-reload
+systemctl enable bng-monitor.service 2>/dev/null || true
+
+echo ""
+echo "  bng-monitor installed. Start with: systemctl start bng-monitor"
+echo "  Dashboard: http://$(hostname -I | awk '{print $1}' 2>/dev/null || echo 'SERVER_IP'):8877"
+echo ""
+
+exit 0

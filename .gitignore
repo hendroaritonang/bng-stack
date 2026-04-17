@@ -1,0 +1,6 @@
+dist/
+packages/bng-stack-runtime/DEBIAN/Installed-Size
+packages/bng-monitor/DEBIAN/Installed-Size
+**/__pycache__/
+*.pyc
+*.pyo

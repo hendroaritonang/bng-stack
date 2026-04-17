@@ -1,0 +1,14 @@
+# /etc/bng-stack/templates/vpp-bootstrap.cli.tmpl
+# VPP bootstrap.cli template
+# Variables:
+#   {{UPLINK_IF}}     e.g. enp4s0f0np0
+#   {{PPPOE_IF}}      e.g. enp4s0f2np2
+#   {{BR_BLOCKS}}     multi-line block per BR (vlan, lcp, pppoe-map, loopback)
+
+set interface state {{UPLINK_IF}} up
+set interface state {{PPPOE_IF}} up
+
+{{BR_BLOCKS}}
+
+set interface rx-mode {{UPLINK_IF}} polling
+set interface rx-mode {{PPPOE_IF}} polling

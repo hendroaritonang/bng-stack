@@ -1,0 +1,9 @@
+#!/bin/bash
+# bng-stack-runtime prerm — runs before package files are removed
+set -e
+
+systemctl stop pppoe-neigh-sync.service 2>/dev/null || true
+systemctl stop 'accel-ppp@*.service'   2>/dev/null || true
+systemctl disable pppoe-neigh-sync.service 2>/dev/null || true
+
+exit 0
