@@ -7,6 +7,14 @@ set -e
 mkdir -p /usr/local/lib64/accel-ppp
 ln -sf /usr/lib64/accel-ppp/libvyos_vpp.so /usr/local/lib64/accel-ppp/libvyos_vpp.so
 
+# ── deploy patched pppoe_plugin.so (bounds-check fix in pppoe_update_adj) ──
+if [ -f /usr/lib/x86_64-linux-gnu/vpp_plugins/pppoe_plugin.so ]; then
+    cp -f /usr/lib/x86_64-linux-gnu/vpp_plugins/pppoe_plugin.so \
+          /usr/lib/x86_64-linux-gnu/vpp_plugins/pppoe_plugin.so.bak-bng 2>/dev/null || true
+fi
+mkdir -p /usr/lib/x86_64-linux-gnu/vpp_plugins
+cp -f /opt/bng-stack/pppoe_plugin.so /usr/lib/x86_64-linux-gnu/vpp_plugins/pppoe_plugin.so 2>/dev/null || true
+
 # ── permissions ───────────────────────────────────────────────────────
 chmod +x /usr/local/sbin/accel-pppd
 chmod +x /usr/local/sbin/accel-ppp-vpp-cleanup.sh

@@ -104,6 +104,9 @@ def get_gateway_loop_id(gw_ip):
 
 
 def get_active_sessions():
+    # Clear zombie cache each cycle so reconnected subscribers are re-probed.
+    _zombie_interfaces.clear()
+
     sessions = {}
     mac_re = re.compile(r'^(?:[0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$')
 
@@ -152,6 +155,13 @@ def get_active_sessions():
 
 _loopbacks_ready = set()
 
+# Track interfaces that returned 'unknown input' from VPP — i.e. they no
+# longer exist in VPP's interface table.  We stop calling vppctl for them
+# so we don't spam VPP logs every 2 s.  The set is cleared whenever a fresh
+# active session list is built, so a legitimately reconnected subscriber
+# (same username, new session) will be probed again.
+_zombie_interfaces = set()
+
 
 def vpp_loopback_exists(loop_if):
     """Check if a VPP loopback interface already exists and is up."""
@@ -165,14 +175,24 @@ def vpp_loopback_exists(loop_if):
 
 
 def vpp_interface_is_up(ifname):
-    """Check if a VPP interface exists and is admin-up."""
+    """Check if a VPP interface exists and is admin-up.
+
+    Returns:
+        True  — interface exists and is admin-up
+        False — interface exists but is admin-down, or vppctl error
+        None  — interface is unknown to VPP ('unknown input' response)
+               caller should treat this as a zombie and stop polling
+    """
     if not ifname:
         return False
     try:
         res = run(['/usr/bin/vppctl', 'show interface', ifname], timeout=4)
-        if res.returncode == 0 and ifname in (res.stdout or ''):
-            # Check for 'up' in the state column (second field after Name/Idx)
-            for line in (res.stdout or '').splitlines():
+        stdout = res.stdout or ''
+        if 'unknown input' in stdout or 'unknown input' in (res.stderr or ''):
+            # VPP does not know this interface at all — it was deleted
+            return None
+        if res.returncode == 0 and ifname in stdout:
+            for line in stdout.splitlines():
                 parts = line.split()
                 if len(parts) >= 3 and parts[0] == ifname:
                     return parts[2].lower() == 'up'
@@ -183,6 +203,13 @@ def vpp_interface_is_up(ifname):
 
 def ensure_vpp_source(instance, session_name, gw_ip):
     if not session_name or not gw_ip:
+        return
+
+    # Skip interfaces already confirmed as zombie (not in VPP table).
+    # This prevents spamming VPP CLI with 'show interface <username>' every
+    # 2 s when the PPPoE session has already been torn down in VPP but
+    # accel-ppp still reports it as active briefly during teardown.
+    if session_name in _zombie_interfaces:
         return
 
     loop_id = get_gateway_loop_id(gw_ip)
@@ -201,7 +228,13 @@ def ensure_vpp_source(instance, session_name, gw_ip):
 
     # Only set unnumbered if the session interface actually exists and is UP in VPP.
     # Orphan/DOWN interfaces from desync would spam VPP logs with parse errors.
-    if not vpp_interface_is_up(session_name):
+    status = vpp_interface_is_up(session_name)
+    if status is None:
+        # Interface unknown to VPP — mark as zombie, stop polling
+        _zombie_interfaces.add(session_name)
+        log(f'interface {session_name!r} not found in VPP — marking as zombie, skipping')
+        return
+    if not status:
         return
     run(['/usr/bin/vppctl', f'set interface unnumbered {session_name} use {loop_if}'])
 
