@@ -72,16 +72,17 @@ jobs:
 
       - name: Deploy apt repo to GitHub Pages
         run: |
-          # Copy apt repo to gh-pages branch folder
-          cp -r dist/apt-repo ./apt-repo-publish
-          # Add .nojekyll so GitHub Pages serves the files raw
-          touch apt-repo-publish/.nojekyll
+          # apt-repo already contains install.sh (added by Makefile)
+          # Add .nojekyll so GitHub Pages serves files raw (no Jekyll processing)
+          touch dist/apt-repo/.nojekyll
+          # Verify structure
+          echo "=== apt-repo structure ==="
+          find dist/apt-repo -type f | sort
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./apt-repo-publish
+          publish_dir: ./dist/apt-repo
           publish_branch: gh-pages
-          force_orphan: false
-          keep_files: true
+          force_orphan: true
