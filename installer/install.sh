@@ -50,10 +50,14 @@ info "Checking prerequisites ..."
 
 [ "$(id -u)" -eq 0 ] || die "Must run as root. Use: sudo bash"
 
-OS=$(. /etc/os-release && echo "$ID$VERSION_ID")
+# Source os-release into current shell so VERSION_ID is available
+ID=""
+VERSION_ID=""
+[ -f /etc/os-release ] && . /etc/os-release
+OS="${ID}${VERSION_ID}"
 case "$OS" in
-    ubuntu22.04|ubuntu24.04) ok "OS: Ubuntu $VERSION_ID" ;;
-    *) warn "Untested OS: $OS. Proceeding anyway..." ;;
+    ubuntu22.04|ubuntu24.04) ok "OS: Ubuntu ${VERSION_ID}" ;;
+    *) warn "Untested OS: ${OS:-unknown}. Proceeding anyway..." ;;
 esac
 
 # Check VPP is installed (custom build required)
