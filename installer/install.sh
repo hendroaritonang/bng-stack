@@ -84,17 +84,18 @@ ok "Prerequisites satisfied"
 # ── add apt repository ─────────────────────────────────────────────────
 info "Adding bng-stack apt repository ..."
 
-curl -fsSL "$KEYRING_URL" | gpg --dearmor -o "$KEYRING_PATH" 2>/dev/null || {
-    # If GPG key not yet available (first publish), create unsigned
-    warn "GPG key not available — adding unsigned repo (OK for testing)"
-    cat > "$APT_LIST" <<LIST
-deb [trusted=yes] ${APT_REPO_URL} ${APT_REPO_DIST} ${APT_REPO_COMP}
-LIST
-}
-
-if [ -f "$KEYRING_PATH" ]; then
+# Try to fetch GPG key; if unavailable fall back to trusted=yes (unsigned repo)
+if curl -fsSL "$KEYRING_URL" 2>/dev/null | gpg --dearmor --yes -o "$KEYRING_PATH" 2>/dev/null && \
+   [ -s "$KEYRING_PATH" ]; then
     cat > "$APT_LIST" <<LIST
 deb [arch=amd64 signed-by=${KEYRING_PATH}] ${APT_REPO_URL} ${APT_REPO_DIST} ${APT_REPO_COMP}
+LIST
+else
+    # GPG key not yet available — use unsigned repo
+    rm -f "$KEYRING_PATH"
+    warn "GPG key not available — using unsigned repo (trusted=yes)"
+    cat > "$APT_LIST" <<LIST
+deb [trusted=yes] ${APT_REPO_URL} ${APT_REPO_DIST} ${APT_REPO_COMP}
 LIST
 fi
 
