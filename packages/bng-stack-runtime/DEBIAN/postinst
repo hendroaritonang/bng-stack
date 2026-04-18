@@ -26,7 +26,7 @@ mkdir -p /run/accel-ppp-vpp
 mkdir -p /run/pppoe-neigh-sync
 
 # ── apply sysctl (hugepages) ──────────────────────────────────────────
-sysctl -p /etc/sysctl.d/80-vpp.conf >/dev/null 2>&1 || true
+sysctl -p /etc/sysctl.d/90-bng-stack-vpp.conf >/dev/null 2>&1 || true
 
 # ── enable systemd services (but don't start — needs config first) ────
 systemctl daemon-reload

@@ -205,8 +205,8 @@ done
 
 # ── hugepages sysctl ──────────────────────────────────────────
 info "Applying hugepages (vm.nr_hugepages=$NR_HUGEPAGES) ..."
-sed -i "s/^vm.nr_hugepages=.*/vm.nr_hugepages=${NR_HUGEPAGES}/" /etc/sysctl.d/80-vpp.conf
-sysctl -p /etc/sysctl.d/80-vpp.conf >/dev/null
+sed -i "s/^vm.nr_hugepages=.*/vm.nr_hugepages=${NR_HUGEPAGES}/" /etc/sysctl.d/90-bng-stack-vpp.conf
+sysctl -p /etc/sysctl.d/90-bng-stack-vpp.conf >/dev/null
 
 # ── build DPDK devices block ──────────────────────────────────
 DPDK_BLOCK="  dev ${UPLINK_PCI} { name ${UPLINK_IF} }\n"
