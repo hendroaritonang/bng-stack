@@ -1,0 +1,35 @@
+Package: bng-monitor
+Version: 1.0.4
+Architecture: amd64
+Maintainer: Hendro Aritonang <hendroaritonang07@gmail.com>
+Installed-Size: 324
+Depends: python3, python3-venv, python3-pip
+Filename: pool/main/b/bng-monitor/bng-monitor_1.0.4_amd64.deb
+Size: 60298
+MD5sum: 80d93dbc912bb0073e923732d0ee1749
+SHA1: aefe67681861a90141e84c95d619884911483a51
+SHA256: f6d31aee26afdd75d55107ee5c379e64659773ac3c1521c9dc2fab66c9008855
+Description: BNG Monitor — Web dashboard for VPP/Accel-PPP monitoring
+ FastAPI-based web dashboard for real-time monitoring of BNG stack:
+ PPPoE sessions, policer traffic, RADIUS, alerts, and history.
+ Runs on port 8877 by default.
+
+Package: bng-stack-runtime
+Version: 1.0.4
+Architecture: amd64
+Maintainer: Hendro Aritonang <hendroaritonang07@gmail.com>
+Installed-Size: 1920
+Depends: vpp, vpp-plugin-core, vpp-plugin-dpdk, frr, python3
+Recommends: accel-web-manager, vpp-snmp-agent
+Filename: pool/main/b/bng-stack-runtime/bng-stack-runtime_1.0.4_amd64.deb
+Size: 445418
+MD5sum: d43c9eac1aa6119d4f61b20b8423508d
+SHA1: 87dd1d1b7dfb6c05b076596d76763a9d7628874f
+SHA256: cc3d98e99d1c8d403cff35f95a6d76a19ce2132ecfe5bd2e2e32fcb0b7aa1f7d
+Description: BNG Stack Runtime — accel-pppd, VPP plugins, and system services
+ Custom accel-pppd binary with VyOS VPP integration plugin (libvyos_vpp.so),
+ PPPoE neighbor sync daemon, accel-ppp cleanup script, systemd service units,
+ and VPP/sysctl configuration for a complete BNG stack deployment.
+ .
+ Assumes VPP custom build (vyos) is already installed.
+
