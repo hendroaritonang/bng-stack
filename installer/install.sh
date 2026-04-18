@@ -71,7 +71,8 @@ if ! dpkg -l vpp 2>/dev/null | grep -q '^ii'; then
     echo ""
     if [ "$NON_INTERACTIVE" != "1" ]; then
         echo -ne "  Continue anyway? [y/N]: "
-        read -r c; [[ "$c" =~ ^[Yy]$ ]] || exit 0
+        # Read from /dev/tty explicitly so it works even when piped via curl | bash
+        read -r c </dev/tty; [[ "$c" =~ ^[Yy]$ ]] || exit 0
     fi
 fi
 
